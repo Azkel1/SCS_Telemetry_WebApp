@@ -47,7 +47,7 @@
 			'status-icons'
 			'job-summary';
 
-		grid-template-rows: 1.25fr auto 0.75fr 1fr 4fr;
+		grid-template-rows: 1.25fr auto 0.75fr 1fr auto;
 		min-height: 100vh;
 
 		:global {
