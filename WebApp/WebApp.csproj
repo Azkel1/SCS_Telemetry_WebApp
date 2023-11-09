@@ -21,6 +21,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\scs-sdk-plugin\scs-client\C#\SCSSdkClient\SCSSdkClient.csproj" />
+		<Content Include="views\**" CopyToPublishDirectory="always"/>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

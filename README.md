@@ -21,10 +21,11 @@ The project is inspired by [kniffen](https://github.com/kniffen)'s [TruckSim-Tel
 
 ## Installing instructions
 
-1. Download the prebuild `.exe` from the releases section
-2. Run the program `SCS_Telemetry_WebApp.exe`
-3. Open the game
-4. Open a web browser and navigate to `localhost:8080` or `[ip of the computer running the program here]:8080`
+1. Download the latest version `.zip` from the releases section
+2. Extract the `.zip` into a folder
+3. Run the program `SCS_Telemetry_WebApp.exe`
+4. Open the game
+5. Open a web browser and navigate to `localhost:8080` or `[ip of the computer running the program here]:8080`
 
 ---
 
