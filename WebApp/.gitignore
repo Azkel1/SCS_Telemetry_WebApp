@@ -399,6 +399,6 @@ FodyWeavers.xsd
 
 # Frontend ignores
 views/
-webapp/.svelte-kit
-webapp/build
-webapp/node_modules
+frontend/.svelte-kit
+frontend/build
+frontend/node_modules

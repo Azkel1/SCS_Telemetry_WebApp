@@ -5,25 +5,12 @@ using Nancy.Hosting.Self;
 using SCSSdkClient;
 using SCSSdkClient.Object;
 using System.Net;
-using System.Text.Json;
 using WebSocketProxy;
 
 namespace SCS_Telemetry_WebApp
 {
     internal class Program
     {
-        private static SCSSdkTelemetry? _telemetry = null;
-
-        public static SCSSdkTelemetry Telemetry
-        {
-            get
-            {
-                _telemetry ??= new SCSSdkTelemetry(200);
-
-                return _telemetry;
-            }
-        }
-
         private static void Main(string[] args)
         {
             TcpProxyConfiguration configuration = new()
@@ -59,30 +46,35 @@ namespace SCS_Telemetry_WebApp
             // Start the HTTP server
             nancyHost.Start();
 
+            // Connect to the game SDK and start listening for events
+            GameTelemetry.Start();
+
             // Start the WebSocket server
             websocketServer.Start(connection =>
             {
-                connection.OnOpen = () => Console.WriteLine($"Client connected: {connection.ConnectionInfo.Id}");
-                connection.OnClose = () => Console.WriteLine($"Client disconnected: {connection.ConnectionInfo.Id}");
-
-                // Handle game telemetry events and broadcast them to each websocket client
-                Telemetry.Data += (SCSTelemetry data, bool updated) =>
+                TelemetryData dataHandler = (SCSTelemetry data, bool updated) =>
                 {
                     if (updated)
                     {
-                        GameTelemetry gameTelemetry = new GameTelemetry(data);
-
-                        connection.Send(JsonSerializer.Serialize(gameTelemetry));
+                        connection.Send(GameTelemetry.GetSerializedData());
                     }
                 };
 
-                // Handle button presses on the client UI and forward them to the game
-                //connection.OnMessage = (string message) =>
-                //{
-                //    Message parsedMessage = JsonConvert.DeserializeObject<Message>(message);
+                connection.OnOpen = () =>
+                {
+                    Console.WriteLine($"Client connected: {connection.ConnectionInfo.Id}");
 
-                //    Console.WriteLine($"Message: {parsedMessage}");
-                //};
+                    // Handle game telemetry events and broadcast them to each websocket client
+                    GameTelemetry.RawGameTelemetry.Data += dataHandler;
+                };
+
+                connection.OnClose = () =>
+                {
+                    Console.WriteLine($"Client disconnected: {connection.ConnectionInfo.Id}");
+
+                    // Remove the event listener from the game SDK
+                    GameTelemetry.RawGameTelemetry.Data -= dataHandler;
+                };
             });
 
             tcpProxy.Start();
@@ -90,12 +82,6 @@ namespace SCS_Telemetry_WebApp
             Console.WriteLine("Press [Enter] to stop");
             Console.ReadLine();
         }
-    }
-
-    class Message
-    {
-        public required string Command { get; set; }
-        public required object Data { get; set; }
     }
 
     public class Controller : NancyModule

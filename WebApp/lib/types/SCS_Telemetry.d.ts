@@ -3,29 +3,30 @@
 //     the code is regenerated.
 
 declare module GameSDK {
-	export class GameTelemetry
+	export interface GameTelemetry
 	{
-		public gameTime: string;
-		public timeToSleep: string;
-		public currentSpeed: GameSDK.Speed;
-		public speedLimit: GameSDK.Speed;
-		public coordinates: GameSDK.Coordinates;
-		public fuelAmount: number;
-		public totalFuelCapacity: number;
-		public estimatedFuelRange: number;
-		public jobDistance: number;
-		public currentJobTravelledDistance: number;
-		public originCity: string;
-		public destinationCity: string;
+		isGamePaused: boolean;
+		gameTime: string;
+		timeToSleep: string;
+		currentSpeed: GameSDK.Speed;
+		speedLimit: GameSDK.Speed;
+		coordinates: GameSDK.Coordinates;
+		fuelAmount: number;
+		totalFuelCapacity: number;
+		estimatedFuelRange: number;
+		jobDistance: number;
+		currentJobTravelledDistance: number;
+		originCity: string;
+		destinationCity: string;
 	}
-	export class Speed
+	export interface Speed
 	{
-		public kph: number;
-		public mph: number;
+		kph: number;
+		mph: number;
 	}
-	export class Coordinates
+	export interface Coordinates
 	{
-		public latitude: string;
-		public longitude: string;
+		latitude: string;
+		longitude: string;
 	}
 }

@@ -11,11 +11,11 @@
     - [Getting data from the game](#getting-data-from-the-game)
     - [Displaying game data](#displaying-game-data)
 
-
-
 ## Summary
 
 The intent of this project is to build a web app that displays in-game data for [Euro Truck Simulator 2](https://store.steampowered.com/app/227300/Euro_Truck_Simulator_2/) by connecting to the game via the [game SDK](https://modding.scssoft.com/wiki/Documentation/Engine/SDK/Telemetry).
+
+![Image showcasing the UI of the app](showcase.png)
 
 The project is inspired by [kniffen](https://github.com/kniffen)'s [TruckSim-Telemetry](https://github.com/kniffen/TruckSim-Telemetry)
 

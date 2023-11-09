@@ -6,10 +6,10 @@ namespace SCS_Telemetry_WebApp
     {
         public static void Configure(ConfigurationBuilder builder)
         {
-            builder.Global(conf => conf.ExportPureTypings());
+            builder.Global(conf => conf.ExportPureTypings().CamelCaseForProperties());
 
             builder
-                .ExportAsClasses(new Type[]
+                .ExportAsInterfaces(new Type[]
                 {
                     typeof(GameTelemetry),
                     typeof(Speed),
@@ -18,6 +18,7 @@ namespace SCS_Telemetry_WebApp
                 }, conf => conf
                     .WithPublicProperties()
                     .OverrideNamespace("GameSDK")
+                    .AutoI(false)
                 );
         }
     }

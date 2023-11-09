@@ -1,68 +1,140 @@
-﻿using SCSSdkClient.Object;
+﻿using Reinforced.Typings.Attributes;
+using SCSSdkClient;
+using SCSSdkClient.Object;
+using System.Text.Json;
 
 namespace SCS_Telemetry_WebApp
 {
-    public class Speed
+    public struct Speed
     {
-        public int kph { get; set; }
-        public int mph { get; set; }
+        public int Kph { get; set; }
+        public int Mph { get; set; }
     }
 
-    public class Coordinates
+    public struct Coordinates
     {
-        public required string latitude { get; set; }
-        public required string longitude { get; set; }
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
     }
 
-    public struct GameTelemetry
+    public class GameTelemetry
     {
-        public string gameTime { get; set; }
-        public string timeToSleep { get; set; }
+        private static SCSSdkTelemetry? _rawTelemetry = null;
+        private static bool storeTruckOdometer = false;
+        private static float? truckOdometer = null;
 
-        public Speed currentSpeed { get; set; }
-        public Speed speedLimit { get; set; }
-        public Coordinates coordinates { get; set; }
-
-        public float fuelAmount { get; set; }
-        public float totalFuelCapacity { get; set; }
-        public float estimatedFuelRange { get; set; }
-
-        public float jobDistance { get; set; }
-        public float currentJobTravelledDistance { get; set; }
-        public string originCity { get; set; }
-        public string destinationCity { get; set; }
-
-        public GameTelemetry(SCSTelemetry data)
+        [TsIgnore]
+        public static SCSSdkTelemetry RawGameTelemetry
         {
-            DateTime _gameTime = data.CommonValues.GameTime.Date;
-            DateTime _timeToSleep = data.CommonValues.NextRestStop.Date;
-
-            gameTime = $"{_gameTime.Hour}:{_gameTime.Minute}";
-            timeToSleep = $"{_timeToSleep.Hour}:{_timeToSleep.Minute}";
-
-            currentSpeed = new Speed {
-                kph = (int)Math.Round(data.TruckValues.CurrentValues.DashboardValues.Speed.Kph),
-                mph = (int)Math.Round(data.TruckValues.CurrentValues.DashboardValues.Speed.Mph)
-            };
-            speedLimit = new Speed
+            get
             {
-                kph = (int)Math.Round(data.NavigationValues.SpeedLimit.Kph),
-                mph = (int)Math.Round(data.NavigationValues.SpeedLimit.Mph),
-            };
-            coordinates = new Coordinates
+                _rawTelemetry ??= new SCSSdkTelemetry(200);
+
+                return _rawTelemetry;
+            }
+        }
+
+        public static bool IsGamePaused { get; private set; }
+        public static string? GameTime { get; private set; }
+        public static string? TimeToSleep { get; private set; }
+
+        public static Speed CurrentSpeed { get; private set; }
+        public static Speed SpeedLimit { get; private set; }
+        public static Coordinates Coordinates { get; private set; }
+
+        public static float FuelAmount { get; private set; }
+        public static float TotalFuelCapacity { get; private set; }
+        public static float EstimatedFuelRange { get; private set; }
+
+        public static float JobDistance { get; private set; }
+        public static float CurrentJobTravelledDistance { get; private set; }
+        public static string? OriginCity { get; private set; }
+        public static string? DestinationCity { get; private set; }
+
+        [TsIgnore]
+        public static void Start()
+        {
+            RawGameTelemetry.Data += (SCSTelemetry data, bool updated) =>
             {
-                latitude = string.Format("{0:0.###}", data.TruckValues.Positioning.CabinPositionInWorlSpace.Y),
-                longitude = string.Format("{0:0.###}", data.TruckValues.Positioning.CabinPositionInWorlSpace.X),
+                if (updated)
+                {
+                    if (storeTruckOdometer && !data.Paused)
+                    {
+                        truckOdometer = data.TruckValues.CurrentValues.DashboardValues.Odometer;
+                        storeTruckOdometer = false;
+                    }
+
+                    DateTime _gameTime = data.CommonValues.GameTime.Date;
+                    DateTime _timeToSleep = data.CommonValues.NextRestStop.Date;
+
+                    IsGamePaused = data.Paused;
+                    GameTime = $"{_gameTime.Hour}:{_gameTime.Minute}";
+                    TimeToSleep = $"{_timeToSleep.Hour}:{_timeToSleep.Minute}";
+
+                    CurrentSpeed = new Speed
+                    {
+                        Kph = (int)Math.Round(data.TruckValues.CurrentValues.DashboardValues.Speed.Kph),
+                        Mph = (int)Math.Round(data.TruckValues.CurrentValues.DashboardValues.Speed.Mph)
+                    };
+                    SpeedLimit = new Speed
+                    {
+                        Kph = (int)Math.Round(data.NavigationValues.SpeedLimit.Kph),
+                        Mph = (int)Math.Round(data.NavigationValues.SpeedLimit.Mph),
+                    };
+                    Coordinates = new Coordinates
+                    {
+                        Latitude = string.Format("{0:0.###}", data.TruckValues.Positioning.CabinPositionInWorlSpace.Y),
+                        Longitude = string.Format("{0:0.###}", data.TruckValues.Positioning.CabinPositionInWorlSpace.X),
+                    };
+
+                    FuelAmount = data.TruckValues.CurrentValues.DashboardValues.FuelValue.Amount;
+                    TotalFuelCapacity = data.TruckValues.ConstantsValues.CapacityValues.Fuel;
+                    EstimatedFuelRange = data.TruckValues.CurrentValues.DashboardValues.FuelValue.Range;
+
+                    JobDistance = data.JobValues.PlannedDistanceKm;
+                    OriginCity = data.JobValues.CitySource;
+                    DestinationCity = data.JobValues.CityDestination;
+
+                    if (data.SpecialEventsValues.OnJob && truckOdometer is not null)
+                    {
+                        CurrentJobTravelledDistance = data.TruckValues.CurrentValues.DashboardValues.Odometer - (float)truckOdometer;
+                    }
+                    else
+                    {
+                        CurrentJobTravelledDistance = 0;
+                    }
+                }
             };
 
-            fuelAmount = data.TruckValues.CurrentValues.DashboardValues.FuelValue.Amount;
-            totalFuelCapacity = data.TruckValues.ConstantsValues.CapacityValues.Fuel;
-            estimatedFuelRange = data.TruckValues.CurrentValues.DashboardValues.FuelValue.Range;
+            RawGameTelemetry.JobStarted += (object? sender, EventArgs e) =>
+            {
+                storeTruckOdometer = true;
+                truckOdometer = null;
+            };
+        }
 
-            jobDistance = data.JobValues.PlannedDistanceKm;
-            currentJobTravelledDistance = data.TruckValues.CurrentValues.DashboardValues.Odometer;
-            originCity = data.JobValues.CitySource;
-            destinationCity = data.JobValues.CityDestination;
+        [TsIgnore]
+        public static string GetSerializedData()
+        {
+            return JsonSerializer.Serialize(new
+            {
+                IsGamePaused,
+                GameTime,
+                TimeToSleep,
+                CurrentSpeed,
+                SpeedLimit,
+                Coordinates,
+                FuelAmount,
+                TotalFuelCapacity,
+                EstimatedFuelRange,
+                JobDistance,
+                CurrentJobTravelledDistance,
+                OriginCity,
+                DestinationCity
+            }, new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
         }
     }
 }

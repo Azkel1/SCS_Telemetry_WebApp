@@ -11,10 +11,10 @@ function build(cb) {
         });
     }
 
-    exec('cd webapp && pnpm i && pnpm build', (err, stdout, stderr) => {
+    exec('cd frontend && pnpm i && pnpm build', (err, stdout, stderr) => {
         console.log("testing", err, stdout, stderr);
 
-        src('webapp/build/**/*').pipe(dest('views'))
+        src('frontend/build/**/*').pipe(dest('views'))
 
         console.log('Copied files to output directory (views)')
 
