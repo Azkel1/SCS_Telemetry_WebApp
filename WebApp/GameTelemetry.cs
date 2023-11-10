@@ -65,11 +65,12 @@ namespace SCS_Telemetry_WebApp
                     }
 
                     DateTime _gameTime = data.CommonValues.GameTime.Date;
-                    DateTime _timeToSleep = data.CommonValues.NextRestStop.Date;
+                    int _minutesToSleep = data.CommonValues.NextRestStop.Value;
+                    string exceededSleepTimeIndicator = (_minutesToSleep % 60 < 0) ? "-" : "";
 
                     IsGamePaused = data.Paused;
-                    GameTime = $"{_gameTime.Hour}:{_gameTime.Minute}";
-                    TimeToSleep = $"{_timeToSleep.Hour}:{_timeToSleep.Minute}";
+                    GameTime = $"{_gameTime.Hour:00}:{_gameTime.Minute:00}";
+                    TimeToSleep = $"{exceededSleepTimeIndicator}{_minutesToSleep / 60}:{Math.Abs(_minutesToSleep % 60):00}";
 
                     CurrentSpeed = new Speed
                     {

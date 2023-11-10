@@ -10,7 +10,7 @@
 <section id="clock">
     <strong id="ingame-time">{currentDateTime}</strong>
     <!-- TODO: Find a better element -->
-    <span id="time-to-rest">
+    <span id="time-to-rest" class:exceeded={timeToSleep.includes('-')}>
         <SleepIcon />
         {timeToSleep}
     </span>
@@ -36,6 +36,10 @@
             font-size: 1.25rem;
             display: flex;
             gap: 0.15em;
+
+			&.exceeded {
+				color: var(--red-7);
+			}
         }
 	}
 </style>
